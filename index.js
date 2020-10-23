@@ -1,11 +1,15 @@
 "use strict"
-const fs = require("fs")
+const download = require("./src/download")
 
-//Bencode is data serialization format. Is able to decode torrent data.
+const fs = require("fs")
 const bencode = require("bencode")
-const tracker = require("./src/tracker")
-const torrent = bencode.decode(fs.readFileSync("./data/drone.torrent"))
+const tracker = require("./tracker")
+const torrentParser = require("./torrent-parser")
+
+const torrent = torrentParser.open("puppy.torrent")
 
 tracker.getPeers(torrent, peers => {
-	console.log("list of peers", peers)
+	console.log("list of peers: ", peers)
 })
+
+download(torrent)

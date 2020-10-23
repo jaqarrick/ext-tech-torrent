@@ -5,23 +5,19 @@ const Buffer = require("buffer").Buffer
 const urlParse = require("url").parse
 const crypto = require("crypto")
 const torrentParser = require("./torrentParser")
-const util = require("./util")
+const util = require("./tracker_util/util")
+const buildConnReq = require("./tracker_util/buildConnReq")
+const parseConnResp = require("./tracker_util/parseConnResp")
+const buildAnnounceReq = require("./tracker_util/buildAnnounceReq")
 
-const buildConnReq = () => {
-	const buf = Buffer.alloc(16)
-
-	//connection_id = 0x41727101980
-	//Ox specifies hexadecimal format
-	//there is no method for a 64-bit integers in node
-	buf.writeUInt32BE(0x417, 0)
-	buf.writeUInt32BE(0x27101980, 4)
-	// action
-	buf.writeUInt32BE(0, 8) // 4
-	// transaction id
-	crypto.randomBytes(4).copy(buf, 12) // 5
-
-	return buf
-}
+//UDP Tracker Protocol and Message Format
+//Trackers follow a specific protocol and message format
+//In order to get a list of peers, we need to follow this protocol.
+//1. Send a connect request
+//2. Get the connect response and extract connection id
+//3. Use the connection id to send an announce request - this is where we tell
+//the tracker which files we're interested in
+//4. Get the announce response and extract the peers list
 
 module.exports.getPeers = (torrent, callback) => {
 	//dgram is a module for udp.
@@ -54,57 +50,30 @@ const udpSend = (socket, message, rawUrl, callback = () => {}) => {
 }
 
 function respType(resp) {
-	// ...
+	const action = resp.readUInt32BE(0)
+	if (action === 0) return "connect"
+	if (action === 1) return "announce"
 }
 
-function buildConnReq() {
-	// ...
-}
+const parseAnnounceResp = resp => {
+	function group(iterable, groupSize) {
+		let groups = []
+		for (let i = 0; i < iterable.length; i += groupSize) {
+			groups.push(iterable.slice(i, i + groupSize))
+		}
+		return groups
+	}
 
-const parseConnResp = resp => {
 	return {
 		action: resp.readUInt32BE(0),
 		transactionId: resp.readUInt32BE(4),
-		connectionId: resp.slice(8),
+		leechers: resp.readUInt32BE(8),
+		seeders: resp.readUInt32BE(12),
+		peers: group(resp.slice(20), 6).map(address => {
+			return {
+				ip: address.slice(0, 4).join("."),
+				port: address.readUInt16BE(4),
+			}
+		}),
 	}
 }
-
-const builtAnnounceReq = (connId, torrent, port = 6881) => {
-	const buf = Buffer.allocUnsafe(98)
-
-	// connection id
-	connId.copy(buf, 0)
-	// action
-	buf.writeUInt32BE(1, 8)
-	// transaction id
-	crypto.randomBytes(4).copy(buf, 12)
-	// info hash
-	torrentParser.infoHash(torrent).copy(buf, 16)
-	// peerId
-	util.genId().copy(buf, 36)
-	// downloaded
-	Buffer.alloc(8).copy(buf, 56)
-	// left
-	torrentParser.size(torrent).copy(buf, 64)
-	// uploaded
-	Buffer.alloc(8).copy(buf, 72)
-	// event
-	buf.writeUInt32BE(0, 80)
-	// ip address
-	buf.writeUInt32BE(0, 80)
-	// key
-	crypto.randomBytes(4).copy(buf, 88)
-	// num want
-	buf.writeInt32BE(-1, 92)
-	// port
-	buf.writeUInt16BE(port, 96)
-
-	return buf
-}
-
-function parseAnnounceResp(resp) {
-	// ...
-}
-
-//The only way to send a message in a socket is through a buffer
-const message = Buffer.from("hello", utf8)
