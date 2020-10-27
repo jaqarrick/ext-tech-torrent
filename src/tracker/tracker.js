@@ -32,16 +32,16 @@ module.exports.getPeers = (torrent, callback) => {
 	udpSend(socket, buildConnReq(), url)
 
 	socket.on("message", response => {
-		console.log(response)
+		console.log(`response to connection request: ${response}`)
 		//there will be two responses upon the request: a connect and an announce response. We need to distinguish between the two and process them separately.
-		// if (respType(response) === "connect") {
-		// 	const connResp = parseConnResp(response)
-		// 	const announceReq = buildAnnounceReq(connResp.connectionId, torrent)
-		// 	udpSend(socket, announceReq, url)
-		// } else if (respType(response) === "announce") {
-		// 	const announceResp = parseAnnounceResp(response)
-		// 	callback(announceResp.peers)
-		// }
+		if (respType(response) === "connect") {
+			const connResp = parseConnResp(response)
+			const announceReq = buildAnnounceReq(connResp.connectionId, torrent)
+			// 	udpSend(socket, announceReq, url)
+		} else if (respType(response) === "announce") {
+			const announceResp = parseAnnounceResp(response)
+			callback(announceResp.peers)
+		}
 	})
 }
 
@@ -58,5 +58,5 @@ const udpSend = (
 ) => {
 	console.log("connection requested!")
 	const url = urlParse(rawUrl)
-	socket.send(message, 0, message.length, url.port, url.host, callback)
+	socket.send(message, 0, message.length, url.port, url.hostname, callback)
 }
