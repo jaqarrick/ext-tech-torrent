@@ -22,4 +22,6 @@ const buildConnReq = () => {
 	return buf
 }
 
+console.log(buildConnReq())
+
 module.exports = buildConnReq
