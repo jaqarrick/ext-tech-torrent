@@ -1,6 +1,7 @@
 const Buffer = require("buffer").Buffer
 const crypto = require("crypto")
-const genId = require("./util").genId
+const util = require("./util")
+const torrentParser = require("../../torrentParser")
 
 const buildAnnounceReq = (connId, torrent, port = 6881) => {
 	//an announce request contains a buffer of 98 bytes
@@ -8,7 +9,7 @@ const buildAnnounceReq = (connId, torrent, port = 6881) => {
 	const buf = Buffer.allocUnsafe(98)
 
 	//connection id
-	conId.copy(buf, 0)
+	connId.copy(buf, 0)
 
 	//action --- unlike before, our action is now ANNOUNCE(1)
 	//rather than CONNECT(0)

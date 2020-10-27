@@ -4,11 +4,12 @@ const dgram = require("dgram")
 const Buffer = require("buffer").Buffer
 const urlParse = require("url").parse
 const crypto = require("crypto")
-const torrentParser = require("../torrent-parser")
+const torrentParser = require("../torrentParser")
 const util = require("./tracker_util/util")
 const buildConnReq = require("./tracker_util/buildConnReq")
 const parseConnResp = require("./tracker_util/parseConnResp")
 const buildAnnounceReq = require("./tracker_util/buildAnnounceReq")
+const parseAnnounceResp = require("./tracker_util/parseAnnounceResp")
 const respType = require("./tracker_util/respType")
 
 //UDP Tracker Protocol and Message Format
@@ -36,9 +37,12 @@ module.exports.getPeers = (torrent, callback) => {
 		//there will be two responses upon the request: a connect and an announce response. We need to distinguish between the two and process them separately.
 		if (respType(response) === "connect") {
 			const connResp = parseConnResp(response)
+			// console.log(connResp)
 			const announceReq = buildAnnounceReq(connResp.connectionId, torrent)
-			// 	udpSend(socket, announceReq, url)
+			console.log(`announce request: ${announceReq}`)
+			udpSend(socket, announceReq, url)
 		} else if (respType(response) === "announce") {
+			console.log(`announce response ${response}`)
 			const announceResp = parseAnnounceResp(response)
 			callback(announceResp.peers)
 		}

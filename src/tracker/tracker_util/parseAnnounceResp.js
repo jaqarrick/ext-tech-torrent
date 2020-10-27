@@ -1,6 +1,6 @@
 //the announce response will contain, amoung other information, a list of IP addresses
 //so the announce is not a fixed length, so we must parse dynamically
-module.exports.parseAnnounceResp = resp => {
+const parseAnnounceResp = resp => {
 	//here is the dynamic parsing
 	const group = (iterable, groupSize) => {
 		let groups = []
@@ -34,3 +34,5 @@ module.exports.parseAnnounceResp = resp => {
 		}),
 	}
 }
+
+module.exports = parseAnnounceResp

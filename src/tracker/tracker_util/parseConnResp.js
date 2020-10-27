@@ -1,6 +1,6 @@
 const parseConnResp = resp => {
 	// a connection response is another 16 byte buffer
-
+	console.log(resp.slice(8))
 	return {
 		//first 4 bytes are an action (32 bits), in this case would be 0
 		action: resp.readUInt32BE(0),
