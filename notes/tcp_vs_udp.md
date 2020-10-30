@@ -17,3 +17,23 @@ TCP guarantees that when a user sends data, the other user will recieve that dat
 
 - TCP sends indivudual data packets
 - A connection oriented protocol
+
+#### How TCP works with bitTorrent
+
+- a TCP connection is established between a 'leecher' and a peer seeder.
+- Once established, client lets peer know which file it wants. If the peer doesn't have the file the connection is closed. If they do, they send back a similar message - called a "handshake".
+- Next, the peer likely sends 'have' and 'bitfield' messages that let the client know what pieces it has. Each _'have'_ message contains a piece index in payload. The _bitfield_ message contains a string of pits, one for each piece in the file.
+
+#### Handshake
+
+````
+
+handshake: <pstrlen><pstr><reserved><info_hash><peer_id>
+
+pstrlen: string length of <pstr>, as a single raw byte
+pstr: string identifier of the protocol
+reserved: eight (8) reserved bytes. All current implementations use all zeroes.
+peer_id: 20-byte string used as a unique ID for the client.
+
+In version 1.0 of the BitTorrent protocol, pstrlen = 19, and pstr = "BitTorrent protocol". ```
+````
